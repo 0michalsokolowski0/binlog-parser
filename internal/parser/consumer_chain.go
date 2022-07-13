@@ -1,11 +1,12 @@
 package parser
 
 import (
+	"0michalsokolowski0/binlog-parser/internal/parser/messages"
 	"encoding/json"
 	"fmt"
-	"github.com/golang/glog"
 	"io"
-	"zalora/binlog-parser/parser/messages"
+
+	"github.com/sirupsen/logrus"
 )
 
 type ConsumerChain struct {
@@ -63,18 +64,18 @@ func streamCollector(stream io.Writer, prettyPrint bool) collector {
 		json, err := marshalMessage(message, prettyPrint)
 
 		if err != nil {
-			glog.Errorf("Failed to convert message to JSON: %s", err)
+			logrus.Errorf("Failed to convert message to JSON: %s", err)
 			return err
 		}
 
 		n, err := stream.Write([]byte(fmt.Sprintf("%s\n", json)))
 
 		if err != nil {
-			glog.Errorf("Failed to write message JSON to file %s", err)
+			logrus.Errorf("Failed to write message JSON to file %s", err)
 			return err
 		}
 
-		glog.V(1).Infof("Wrote %d bytes to stream", n)
+		logrus.Infof("Wrote %d bytes to stream", n)
 
 		return nil
 	}

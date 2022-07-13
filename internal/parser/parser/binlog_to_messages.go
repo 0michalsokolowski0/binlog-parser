@@ -1,12 +1,13 @@
 package parser
 
 import (
-	"github.com/golang/glog"
-	"github.com/siddontang/go-mysql/replication"
+	"0michalsokolowski0/binlog-parser/internal/database"
+	"0michalsokolowski0/binlog-parser/internal/parser/conversion"
+	"0michalsokolowski0/binlog-parser/internal/parser/messages"
 	"strings"
-	"zalora/binlog-parser/database"
-	"zalora/binlog-parser/parser/conversion"
-	"zalora/binlog-parser/parser/messages"
+
+	"github.com/go-mysql-org/go-mysql/replication"
+	"github.com/sirupsen/logrus"
 )
 
 type ConsumerFunc func(messages.Message) error
@@ -23,11 +24,11 @@ func ParseBinlogToMessages(binlogFilename string, tableMap database.TableMap, co
 			query := string(queryEvent.Query)
 
 			if strings.ToUpper(strings.Trim(query, " ")) == "BEGIN" {
-				glog.V(3).Info("Starting transaction")
+				logrus.Info("Starting transaction")
 			} else if strings.HasPrefix(strings.ToUpper(strings.Trim(query, " ")), "SAVEPOINT") {
-				glog.V(3).Info("Skipping transaction savepoint")
+				logrus.Info("Skipping transaction savepoint")
 			} else {
-				glog.V(3).Info("Query event")
+				logrus.Info("Query event")
 
 				err := consumer(conversion.ConvertQueryEventToMessage(*e.Header, *queryEvent))
 
@@ -42,7 +43,7 @@ func ParseBinlogToMessages(binlogFilename string, tableMap database.TableMap, co
 			xidEvent := e.Event.(*replication.XIDEvent)
 			xId := uint64(xidEvent.XID)
 
-			glog.V(3).Infof("Ending transaction xID %d", xId)
+			logrus.Infof("Ending transaction xID %d", xId)
 
 			for _, message := range conversion.ConvertRowsEventsToMessages(xId, rowRowsEventBuffer.Drain()) {
 				err := consumer(message)
@@ -64,7 +65,7 @@ func ParseBinlogToMessages(binlogFilename string, tableMap database.TableMap, co
 			err := tableMap.Add(tableId, schema, table)
 
 			if err != nil {
-				glog.Errorf("Failed to add table information for table %s.%s (id %d)", schema, table, tableId)
+				logrus.Errorf("Failed to add table information for table %s.%s (id %d)", schema, table, tableId)
 				return err
 			}
 
@@ -82,7 +83,7 @@ func ParseBinlogToMessages(binlogFilename string, tableMap database.TableMap, co
 			tableMetadata, ok := tableMap.LookupTableMetadata(tableId)
 
 			if !ok {
-				glog.Errorf("Skipping event - no table found for table id %d", tableId)
+				logrus.Errorf("Skipping event - no table found for table id %d", tableId)
 				break
 			}
 

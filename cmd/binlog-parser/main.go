@@ -1,13 +1,15 @@
 package main
 
 import (
+	"0michalsokolowski0/binlog-parser/internal/database"
+	"0michalsokolowski0/binlog-parser/internal/parser"
 	"flag"
 	"fmt"
-	"github.com/golang/glog"
 	"os"
 	"path"
 	"strings"
-	"zalora/binlog-parser/parser"
+
+	"github.com/sirupsen/logrus"
 )
 
 var prettyPrintJsonFlag = flag.Bool("prettyprint", false, "Pretty print json")
@@ -34,7 +36,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	glog.V(1).Infof("Will parse file %s", binlogFilename)
+	logrus.Infof("Will binlog-parser file %s", binlogFilename)
 
 	parseFunc := createBinlogParseFunc(dbDsn, consumerChainFromArgs())
 	err := parseFunc(binlogFilename)
@@ -49,20 +51,20 @@ func consumerChainFromArgs() parser.ConsumerChain {
 	chain := parser.NewConsumerChain()
 
 	chain.CollectAsJson(os.Stdout, *prettyPrintJsonFlag)
-	glog.V(1).Infof("Pretty print JSON %s", *prettyPrintJsonFlag)
+	logrus.Infof("Pretty print JSON %s", *prettyPrintJsonFlag)
 
 	if *includeTablesFlag != "" {
 		includeTables := commaSeparatedListToArray(*includeTablesFlag)
 
 		chain.IncludeTables(includeTables...)
-		glog.V(1).Infof("Including tables %v", includeTables)
+		logrus.Infof("Including tables %v", includeTables)
 	}
 
 	if *includeSchemasFlag != "" {
 		includeSchemas := commaSeparatedListToArray(*includeSchemasFlag)
 
 		chain.IncludeSchemas(includeSchemas...)
-		glog.V(1).Infof("Including schemas %v", includeSchemas)
+		logrus.Infof("Including schemas %v", includeSchemas)
 	}
 
 	return chain
@@ -98,4 +100,30 @@ func commaSeparatedListToArray(str string) []string {
 	}
 
 	return arr
+}
+
+type binlogParseFunc func(string) error
+
+func createBinlogParseFunc(dbDsn string, consumerChain parser.ConsumerChain) binlogParseFunc {
+	return func(binlogFilename string) error {
+		return parseBinlogFile(binlogFilename, dbDsn, consumerChain)
+	}
+}
+
+func parseBinlogFile(binlogFilename, dbDsn string, consumerChain parser.ConsumerChain) error {
+	logrus.Infof("Parsing binlog file %s", binlogFilename)
+
+	db, err := database.GetDatabaseInstance(dbDsn)
+
+	if err != nil {
+		return err
+	}
+
+	defer db.Close()
+
+	tableMap := database.NewTableMap(db)
+
+	logrus.Info("About to binlog-parser file ...")
+
+	return parser.ParseBinlog(binlogFilename, tableMap, consumerChain)
 }

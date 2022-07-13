@@ -1,8 +1,6 @@
 package parser
 
-import (
-	"zalora/binlog-parser/parser/conversion"
-)
+import "0michalsokolowski0/binlog-parser/internal/parser/conversion"
 
 type RowsEventBuffer struct {
 	buffered []conversion.RowsEventData

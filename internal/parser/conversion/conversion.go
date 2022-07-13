@@ -1,11 +1,13 @@
 package conversion
 
 import (
-	"github.com/golang/glog"
-	"github.com/siddontang/go-mysql/replication"
+	"0michalsokolowski0/binlog-parser/internal/database"
+	"0michalsokolowski0/binlog-parser/internal/parser/messages"
+
+	"github.com/go-mysql-org/go-mysql/replication"
+	"github.com/sirupsen/logrus"
+
 	"time"
-	"zalora/binlog-parser/database"
-	"zalora/binlog-parser/parser/messages"
 )
 
 type RowsEventData struct {
@@ -14,7 +16,11 @@ type RowsEventData struct {
 	TableMetadata     database.TableMetadata
 }
 
-func NewRowsEventData(binlogEventHeader replication.EventHeader, binlogEvent replication.RowsEvent, tableMetadata database.TableMetadata) RowsEventData {
+func NewRowsEventData(
+	binlogEventHeader replication.EventHeader,
+	binlogEvent replication.RowsEvent,
+	tableMetadata database.TableMetadata,
+) RowsEventData {
 	return RowsEventData{
 		BinlogEventHeader: binlogEventHeader,
 		BinlogEvent:       binlogEvent,
@@ -22,7 +28,10 @@ func NewRowsEventData(binlogEventHeader replication.EventHeader, binlogEvent rep
 	}
 }
 
-func ConvertQueryEventToMessage(binlogEventHeader replication.EventHeader, binlogEvent replication.QueryEvent) messages.Message {
+func ConvertQueryEventToMessage(
+	binlogEventHeader replication.EventHeader,
+	binlogEvent replication.QueryEvent,
+) messages.Message {
 	header := messages.NewMessageHeader(
 		string(binlogEvent.Schema),
 		"(unknown)",
@@ -79,7 +88,7 @@ func ConvertRowsEventsToMessages(xId uint64, rowsEventsData []RowsEventData) []m
 			break
 
 		default:
-			glog.Errorf("Can't convert unknown event %s", d.BinlogEventHeader.EventType)
+			logrus.Errorf("Can't convert unknown event %s", d.BinlogEventHeader.EventType)
 
 			break
 		}

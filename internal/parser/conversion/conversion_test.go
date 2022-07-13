@@ -1,15 +1,17 @@
+//go:build unit
 // +build unit
 
 package conversion
 
 import (
 	"fmt"
-	"github.com/siddontang/go-mysql/replication"
 	"reflect"
 	"testing"
 	"time"
 	"zalora/binlog-parser/database"
 	"zalora/binlog-parser/parser/messages"
+
+	"github.com/go-mysql-org/go-mysql/replication"
 )
 
 func TestConvertQueryEventToMessage(t *testing.T) {

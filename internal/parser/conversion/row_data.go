@@ -1,8 +1,8 @@
 package conversion
 
 import (
+	"0michalsokolowski0/binlog-parser/internal/parser/messages"
 	"fmt"
-	"zalora/binlog-parser/parser/messages"
 )
 
 func mapRowDataDataToColumnNames(rows [][]interface{}, columnNames map[int]string) []messages.MessageRowData {

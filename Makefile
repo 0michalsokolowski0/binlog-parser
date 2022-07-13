@@ -1,3 +1,47 @@
+.PHONY: build
+build:
+	go build ./...
+
+up:
+	docker-compose up
+
+.PHONY: test
+test:
+	go test ./...
+
+.PHONY: test_v
+test_v:
+	go test -v ./...
+
+.PHONY: test_short
+test_short:
+	go test ./... -short
+
+.PHONY: test_race
+test_race:
+	go test ./... -short -race
+
+.PHONY: fmt
+fmt:
+	go fmt ./...
+	goimports -l -w .
+
+.PHONY: lint
+lint:
+	golangci-lint run
+
+
+
+
+
+
+
+
+
+
+
+
+# TODO: review all of those commands
 BIN_NAME := binlog-parser
 GOCC := env GOPATH=$(CURDIR)/_vendor:$(CURDIR) go
 SRC_DIR := zalora/binlog-parser/...
