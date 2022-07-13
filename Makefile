@@ -1,6 +1,6 @@
 .PHONY: build
 build:
-	go build ./...
+	go build ./cmd/binlog-parser
 
 up:
 	docker-compose up

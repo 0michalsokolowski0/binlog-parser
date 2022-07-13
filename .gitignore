@@ -7,7 +7,7 @@
 *.dll
 *.so
 *.dylib
-main
+binlog-parser
 
 # Test binary, built with `go test -c`
 *.test
